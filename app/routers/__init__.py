@@ -1,4 +1,5 @@
 ﻿from .users import router as users_router
+from .auth import router as auth_router
 from .driver_profiles import router as driver_profiles_router
 from .customer_profiles import router as customer_profiles_router
 from .orders import router as orders_router
@@ -12,6 +13,7 @@ from .settlements import router as settlements_router
 
 __all__ = [
     "users_router",
+    "auth_router",
     "driver_profiles_router",
     "customer_profiles_router",
     "orders_router",

@@ -11,8 +11,10 @@ import {
   MapPin,
   CloudSun,
   Map,
+  Route,
   History,
   BrainCircuit,
+  Terminal,
   Menu,
   X,
 } from "lucide-react";
@@ -31,8 +33,10 @@ const NAV_ITEMS = [
   { to: "/admin/tracking", label: "Трекинг", icon: MapPin },
   { to: "/admin/weather", label: "Погода", icon: CloudSun },
   { to: "/admin/settlements", label: "Нас. пункты", icon: Map },
+  { to: "/admin/routes", label: "Маршруты", icon: Route },
+  { to: "/admin/ai-insights", label: "AI-инсайты", icon: BrainCircuit },
   { to: "/admin/history", label: "История статусов", icon: History },
-  { to: "/admin/ai", label: "AI-рекомендации", icon: BrainCircuit },
+  { to: "/admin/ai", label: "AI-консоль", icon: Terminal },
 ];
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {

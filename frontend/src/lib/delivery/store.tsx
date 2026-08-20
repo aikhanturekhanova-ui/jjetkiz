@@ -38,6 +38,7 @@ export interface OrderItem {
   driverName?: string;
   driverPlate?: string;
   driverPhone?: string;
+  backhaul?: boolean;
   mine: boolean;
   myOrder: boolean;
   createdAt: number;
@@ -429,6 +430,7 @@ interface DeliveryApi {
   acceptOrder: (number: string) => void;
   startOrder: (number: string) => void;
   deliverOrder: (number: string) => void;
+  deliverTrip: (number: string) => void;
   refreshOpen: () => void;
   addSavings: (n: number) => void;
   simulateGrowth: () => void;
@@ -627,6 +629,69 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
     [mutateOrder]
   );
 
+  const deliverTrip = useCallback((number: string) => {
+    setState((prev) => {
+      const target = prev.orders.find((o) => o.number === number);
+      if (!target || target.status !== "in_progress") return prev;
+      const now = Date.now();
+      const orders = prev.orders.map((o) =>
+        o.number === number
+          ? {
+              ...o,
+              status: "delivered" as const,
+              deliveredAt: now,
+              updatedAt: now,
+              events: { ...o.events, delivered: now },
+            }
+          : o
+      );
+      let next: PersistedState = { ...prev, orders };
+      const hasReverse = prev.orders.some(
+        (o) => o.status === "offered" && o.fromId === target.toId && o.toId === target.fromId
+      );
+      if (!hasReverse) {
+        const seq = seqRef.current + 1;
+        seqRef.current = seq;
+        const backhaulOrder: OrderItem = {
+          fromAddress: undefined,
+          toAddress: undefined,
+          volumeM3: target.volumeM3,
+          perishable: false,
+          fragile: false,
+          description: "Обратный груз — товары для обратной дороги",
+          priority: "normal",
+          social: false,
+          poputchik: false,
+          driverPlate: undefined,
+          driverPhone: undefined,
+          deliveredAt: undefined,
+          driverName: undefined,
+          events: { created: now, matching: now, offered: now },
+          number: `JKZ-${seq}`,
+          status: "offered",
+          fromId: target.toId,
+          toId: target.fromId,
+          vehicle: target.vehicle,
+          vehicleName: target.vehicleName,
+          weightKg: Math.max(150, Math.round(target.weightKg * 0.55)),
+          price: Math.max(5_000, Math.round((target.price * 0.75) / 100) * 100),
+          savings: 0,
+          km: target.km,
+          minutes: target.minutes,
+          backhaul: true,
+          mine: false,
+          myOrder: false,
+          createdAt: now,
+          updatedAt: now,
+        };
+        next = { ...next, seq, orders: [backhaulOrder, ...orders] };
+      }
+      const saving = Math.round(target.price * 0.15);
+      next = { ...next, savings: next.savings + saving };
+      return next;
+    });
+  }, []);
+
   const refreshOpen = useCallback(() => {
     setState((prev) => {
       const openCount = prev.orders.filter((o) => o.status === "offered").length;
@@ -681,11 +746,12 @@ export function DeliveryProvider({ children }: { children: ReactNode }) {
       acceptOrder,
       startOrder,
       deliverOrder,
+      deliverTrip,
       refreshOpen,
       addSavings,
       simulateGrowth,
     }),
-    [state, apiState, createOrder, acceptOrder, startOrder, deliverOrder, refreshOpen, addSavings, simulateGrowth]
+    [state, apiState, createOrder, acceptOrder, startOrder, deliverOrder, deliverTrip, refreshOpen, addSavings, simulateGrowth]
   );
 
   return <DeliveryContext.Provider value={value}>{children}</DeliveryContext.Provider>;

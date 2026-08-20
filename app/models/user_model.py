@@ -17,3 +17,4 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
     is_active = Column(Boolean, default=True, nullable=False)
     profile_status = Column(String(20), nullable=False, default="incomplete")
+    password_hash = Column(String(255), nullable=True)

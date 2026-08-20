@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.schemas import *
-from app.routers import users_router, driver_profiles_router, customer_profiles_router, \
+from app.routers import users_router, auth_router, driver_profiles_router, customer_profiles_router, \
     orders_router, order_offers_router, ltl_groups_router, order_status_history_router, \
     tracking_points_router, weather_snapshots_router, refresh_tokens_router, settlements_router
 from app.db.session import get_db_session
@@ -18,6 +18,12 @@ from app.models import Base, User, Settlement, DriverProfile, CustomerProfile, O
 from app.db.base import engine
 
 Base.metadata.create_all(bind=engine)
+
+# Lightweight migration for existing databases: add password_hash to users
+with engine.begin() as conn:
+    cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(users)").fetchall()]
+    if cols and "password_hash" not in cols:
+        conn.exec_driver_sql("ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)")
 
 app = FastAPI(title="Freight Management API + AI Logistics Engine")
 
@@ -44,6 +50,7 @@ def get_db():
         db.close()
 
 app.include_router(users_router)
+app.include_router(auth_router)
 app.include_router(driver_profiles_router)
 app.include_router(customer_profiles_router)
 app.include_router(orders_router)

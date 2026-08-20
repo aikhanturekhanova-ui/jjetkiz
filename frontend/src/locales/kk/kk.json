@@ -1,0 +1,33 @@
+{
+  "home": {
+    "title": "Жеткізушілермен таныстықталмау",
+    "subtitle": "Жеткізушілермен таныстықталмау мәтіні бұрын күшіп, \"гатуылы жаңа жетістікпен қамтамасыз етіңіз.\"
+  },
+  "login": {
+    "title": "Кіру",
+    "placeholder_phone": "Телефон номері",
+    "placeholder_password": "Құпия сөз",
+    "button_login": "Кіру",
+    "link_register": "Регистрациялық емегінгіште кіру"
+  },
+  "register": {
+    "title": "Қош келдіңіз! Регистрация",
+    "placeholder_full_name": "Аты-жөмді жазыңыз",
+    "placeholder_phone": "Телефон номері",
+    "placeholder_password": "Құпия сөз",
+    "button_register": "Тіркелу",
+    "link_login": "Өкінден кіру"
+  },
+  "dashboard": {
+    "title": "Дашборд",
+    "active_orders": "Активті жетістіктер",
+    "completed_orders": "Аяқталған жетістіктер",
+    "total_earnings": "Жүмсе мага",
+    "earnings_today": "Күнгегі жетістік"
+  },
+  "common": {
+    "save": "Қабылдау",
+    "cancel": "Болту",
+    "close": "Қатындыру"
+  }
+}

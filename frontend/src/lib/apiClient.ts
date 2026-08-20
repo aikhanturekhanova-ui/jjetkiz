@@ -24,9 +24,31 @@ const qs = (params: Record<string, string | undefined>) => {
   return str ? `?${str}` : "";
 };
 
+export interface AuthUser {
+  id: string;
+  phone: string;
+  role: string;
+  full_name: string;
+  is_active: boolean;
+  profile_status: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
+}
+
 export const apiClient = {
   // health
   health: () => api.get<{ status: string }>("/health").then((r) => r.data),
+
+  // auth
+  authRegister: (data: { phone: string; password: string; full_name: string }) =>
+    api.post<AuthResponse>("/auth/register", data).then((r) => r.data),
+  authLogin: (data: { phone: string; password: string }) =>
+    api.post<AuthResponse>("/auth/login", data).then((r) => r.data),
+  authMe: (userId: string) => api.get<AuthUser>(`/auth/me?user_id=${userId}`).then((r) => r.data),
 
   // users
   users: () => api.get<User[]>("/users/").then((r) => r.data),

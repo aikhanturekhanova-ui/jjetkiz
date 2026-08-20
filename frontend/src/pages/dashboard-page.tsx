@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/apiClient";
 import { axiosErrorHandler } from "@/lib/api";
+import { useDelivery } from "@/lib/delivery/store";
+import { fmtTenge } from "@/lib/delivery/format";
 
 function useDashboardData() {
   return useQuery({
@@ -36,6 +38,29 @@ function useDashboardData() {
 
 export function DashboardPage() {
   const { data, isLoading, error, refetch, isFetching } = useDashboardData();
+  const { orders } = useDelivery();
+
+  const demo = (() => {
+    const delivered = orders.filter((o) => o.status === "delivered");
+    const active = orders.filter((o) => o.status === "in_progress" || o.status === "accepted");
+    const ltl = orders.filter((o) => o.poputchik);
+    const backhauls = orders.filter((o) => o.status === "offered" && o.backhaul);
+    const cargoT = orders.reduce((s, o) => s + o.weightKg, 0) / 1000;
+    const avgPrice = orders.length ? Math.round(orders.reduce((s, o) => s + o.price, 0) / orders.length) : 0;
+    const avgTime = delivered.length
+      ? Math.round(delivered.reduce((s, o) => s + o.minutes, 0) / delivered.length)
+      : 0;
+    return {
+      total: orders.length,
+      delivered: delivered.length,
+      active: active.length,
+      cargoT,
+      avgPrice,
+      avgTime,
+      ltl: ltl.length,
+      backhauls: backhauls.length,
+    };
+  })();
 
   if (isLoading) {
     return (
@@ -64,9 +89,9 @@ export function DashboardPage() {
     );
   }
 
-  const [health, users, orders, drivers, customers, offers, insights] = data;
-  const delivered = orders.filter((o) => o.status === "delivered").length;
-  const inProgress = orders.filter(
+  const [health, apiUsers, apiOrders, drivers, customers, offers, insights] = data;
+  const delivered = apiOrders.filter((o) => o.status === "delivered").length;
+  const inProgress = apiOrders.filter(
     (o) => o.status === "in_progress" || o.status === "accepted"
   ).length;
   const onlineDrivers = drivers.filter((d) => d.current_status === "online").length;
@@ -86,7 +111,7 @@ export function DashboardPage() {
         title="Дашборд"
         subtitle={
           health.status === "healthy"
-            ? `API: healthy · ${users.length} пользователей · ${insights.total_recommendations} AI-рекомендаций`
+            ? `API: healthy · ${apiUsers.length} пользователей · ${insights.total_recommendations} AI-рекомендаций`
             : "API: статус неизвестен"
         }
         actions={
@@ -96,6 +121,31 @@ export function DashboardPage() {
           </Button>
         }
       />
+
+      <div>
+        <p className="mb-2 flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase">
+          KPI из демо-стора <span className="rounded-full bg-muted px-2 py-0.5 normal-case">работает без API</span>
+        </p>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+          {[
+            { label: "Заказы", value: demo.total },
+            { label: "Доставлено", value: demo.delivered },
+            { label: "В работе", value: demo.active },
+            { label: "Груз, тонн", value: `${demo.cargoT.toFixed(1)} т` },
+            { label: "Средняя цена", value: fmtTenge(demo.avgPrice) },
+            { label: "Ср. время доставки", value: `~${demo.avgTime} мин` },
+            { label: "LTL-заявки", value: demo.ltl },
+            { label: "Backhaul-предложения", value: demo.backhauls },
+          ].map((s) => (
+            <Card key={s.label}>
+              <CardContent className="py-4">
+                <div className="tnum text-2xl font-bold leading-none">{s.value}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         {stats.map(({ label, value, icon: Icon, color }) => (

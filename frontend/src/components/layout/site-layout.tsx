@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { Menu, WifiOff, X } from "lucide-react";
+import { Menu, WifiOff, X, CircleUserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { useMode } from "@/lib/mode";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 function Logo({ light = false }: { light?: boolean }) {
@@ -39,7 +40,7 @@ const NAV = [
   { to: "/#routes", label: "Куда везём" },
   { to: "/#how", label: "Как это работает" },
   { to: "/#tariffs", label: "Тарифы" },
-  { to: "/board", label: "Водителям" },
+  { to: "/driver/dashboard", label: "Водителям" },
 ];
 
 function useScrollManager() {
@@ -79,7 +80,10 @@ function ModeRow({ compact = false }: { compact?: boolean }) {
 export function SiteLayout({ children }: { children?: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { lite, setLite } = useMode();
+  const { user, logout } = useAuth();
   useScrollManager();
+
+  const firstName = user?.full_name?.split(" ")[0] ?? "";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -130,6 +134,24 @@ export function SiteLayout({ children }: { children?: ReactNode }) {
             <Link to="/track" className="hidden text-sm font-bold text-foreground transition-colors hover:text-caspi sm:block">
               Отследить заказ
             </Link>
+            {user ? (
+              <div className="hidden items-center gap-1 sm:flex">
+                <Link
+                  to="/driver/dashboard"
+                  className="flex h-10 items-center gap-2 rounded-full border border-line bg-paper px-4 text-sm font-bold text-ink transition-colors hover:border-caspi hover:text-caspi"
+                >
+                  <CircleUserRound className="size-4 text-caspi" aria-hidden />
+                  {firstName}
+                </Link>
+                <Button variant="ghost" size="sm" className="h-10 rounded-full text-sm" onClick={logout}>
+                  Выйти
+                </Button>
+              </div>
+            ) : (
+              <Button asChild variant="outline" className="hidden h-10 rounded-full px-5 sm:inline-flex">
+                <Link to="/login">Войти</Link>
+              </Button>
+            )}
             <Button asChild className="h-10 rounded-full px-5">
               <Link to="/order/new">Создать заявку</Link>
             </Button>
@@ -184,7 +206,7 @@ export function SiteLayout({ children }: { children?: ReactNode }) {
             <ul className="mt-4 space-y-2.5 text-sm">
               <li><Link className="font-semibold text-sand/85 hover:text-sand" to="/order/new">Создать заявку</Link></li>
               <li><Link className="font-semibold text-sand/85 hover:text-sand" to="/track">Отследить заказ</Link></li>
-              <li><Link className="font-semibold text-sand/85 hover:text-sand" to="/board">Водителям</Link></li>
+              <li><Link className="font-semibold text-sand/85 hover:text-sand" to="/driver/dashboard">Водителям</Link></li>
               <li><Link className="font-semibold text-sand/85 hover:text-sand" to="/#tariffs">Тарифы</Link></li>
             </ul>
           </div>
@@ -239,7 +261,7 @@ export function SiteLayout({ children }: { children?: ReactNode }) {
               <Link to="/track">Отследить заказ</Link>
             </Button>
             <Button asChild variant="ghost" className="h-12 justify-start rounded-xl text-base font-bold" onClick={() => setMenuOpen(false)}>
-              <Link to="/board">Водителям</Link>
+              <Link to="/driver/dashboard">Водителям</Link>
             </Button>
             <Button asChild variant="ghost" className="h-12 justify-start rounded-xl text-base font-bold" onClick={() => setMenuOpen(false)}>
               <Link to="/#tariffs">Тарифы</Link>
@@ -247,6 +269,30 @@ export function SiteLayout({ children }: { children?: ReactNode }) {
             <Button asChild variant="ghost" className="h-12 justify-start rounded-xl text-base font-bold" onClick={() => setMenuOpen(false)}>
               <Link to="/#how">Как это работает</Link>
             </Button>
+            {user ? (
+              <div className="border-t pt-3">
+                <p className="px-2 pb-2 text-sm text-muted-foreground">Вошёл как {user.full_name}</p>
+                <Button
+                  variant="ghost"
+                  className="h-12 w-full justify-start rounded-xl text-base font-bold text-red-600 hover:bg-red-50"
+                  onClick={() => {
+                    logout();
+                    setMenuOpen(false);
+                  }}
+                >
+                  Выйти
+                </Button>
+              </div>
+            ) : (
+              <Button
+                asChild
+                variant="ghost"
+                className="h-12 w-full justify-start rounded-xl text-base font-bold text-caspi"
+                onClick={() => setMenuOpen(false)}
+              >
+                <Link to="/login">Войти</Link>
+              </Button>
+            )}
           </nav>
           <div className="mt-auto border-t p-4">
             <ModeRow compact />

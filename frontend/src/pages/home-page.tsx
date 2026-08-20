@@ -254,7 +254,7 @@ export function HomePage() {
               </li>
             </ul>
             <Button asChild className="mt-8 h-12 rounded-full px-7 text-base">
-              <Link to="/board">Смотреть заявки</Link>
+              <Link to="/driver/dashboard">Смотреть заявки</Link>
             </Button>
           </div>
 
