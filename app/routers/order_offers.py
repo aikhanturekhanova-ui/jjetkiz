@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/order-offers", tags=["order-offers"])
 
 
 def get_db():
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[OrderOfferSchema])
@@ -53,20 +53,21 @@ async def create_order_offer(offer_data: OrderOfferCreate, db: Session = Depends
         if not order:
             raise HTTPException(status_code=400, detail="Order not found")
     
-    # Validate driver_id exists
+    # Validate driver_id exists (accepts user id or driver profile id)
     if offer_data.driver_id:
         driver = db.query(UserModel).filter(UserModel.id == offer_data.driver_id).first()
         if not driver:
-            raise HTTPException(status_code=400, detail="Driver not found")
+            from app.models.driver_profile_model import DriverProfile as DriverProfileModel
+            profile = db.query(DriverProfileModel).filter(DriverProfileModel.id == offer_data.driver_id).first()
+            if not profile:
+                raise HTTPException(status_code=400, detail="Driver not found")
     
     offer = OrderOfferModel(
-        id=offer_data.id if offer_data.id else UUID(int=0),
         order_id=offer_data.order_id,
         ltl_group_id=offer_data.ltl_group_id,
         driver_id=offer_data.driver_id,
         status=offer_data.status or OfferStatus.sent,
         sent_at=offer_data.sent_at or datetime.utcnow(),
-        responded_at=offer_data.responded_at,
     )
     db.add(offer)
     db.commit()

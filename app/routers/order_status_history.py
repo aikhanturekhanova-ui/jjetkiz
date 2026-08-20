@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/order-status-history", tags=["order-status-history"]
 
 
 def get_db():
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[OrderStatusHistorySchema])
@@ -45,7 +45,6 @@ async def create_status_history(history_data: OrderStatusHistoryCreate, db: Sess
         raise HTTPException(status_code=400, detail="Order not found")
     
     history = StatusHistoryModel(
-        id=history_data.id if history_data.id else UUID(int=0),
         order_id=history_data.order_id,
         status=history_data.status,
         changed_at=history_data.changed_at or datetime.utcnow(),

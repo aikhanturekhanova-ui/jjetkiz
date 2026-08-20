@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/weather-snapshots", tags=["weather-snapshots"])
 
 
 def get_db():
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[WeatherSnapshotSchema])
@@ -35,14 +35,12 @@ async def get_weather_snapshot(snapshot_id: UUID, db: Session = Depends(get_db))
 @router.post("/", response_model=WeatherSnapshotSchema, status_code=status.HTTP_201_CREATED)
 async def create_weather_snapshot(snapshot_data: WeatherSnapshotCreate, db: Session = Depends(get_db)):
     snapshot = WeatherSnapshotModel(
-        id=snapshot_data.id if snapshot_data.id else UUID(int=0),
         region_point_lat=snapshot_data.region_point_lat,
         region_point_lng=snapshot_data.region_point_lng,
         temperature_c=snapshot_data.temperature_c,
         wind_speed_ms=snapshot_data.wind_speed_ms,
         is_dust_storm_risk=snapshot_data.is_dust_storm_risk,
         fetched_at=snapshot_data.fetched_at or datetime.utcnow(),
-        raw_response=snapshot_data.raw_response,
     )
     db.add(snapshot)
     db.commit()

@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/settlements", tags=["settlements"])
 
 
 def get_db():
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[SettlementSchema])
@@ -33,7 +33,6 @@ async def get_settlement(settlement_id: UUID, db: Session = Depends(get_db)):
 @router.post("/", response_model=SettlementSchema, status_code=status.HTTP_201_CREATED)
 async def create_settlement(settlement_data: SettlementCreate, db: Session = Depends(get_db)):
     settlement = SettlementModel(
-        id=settlement_data.id if settlement_data.id else UUID(int=0),
         name=settlement_data.name,
         lat=settlement_data.lat,
         lng=settlement_data.lng,

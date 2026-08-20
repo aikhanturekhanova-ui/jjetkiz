@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jetkiz — Freight Management</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --panel: #1e293b;
+  --panel-2: #273549;
+  --border: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --accent: #3b82f6;
+  --accent-2: #22d3ee;
+  --green: #22c55e;
+  --red: #ef4444;
+  --amber: #f59e0b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+}
+/* Sidebar */
+#sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+#sidebar .logo {
+  padding: 8px 20px 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-2);
+  letter-spacing: 0.5px;
+}
+#sidebar .logo small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; }
+#sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  border-left: 3px solid transparent;
+  transition: 0.15s;
+}
+#sidebar nav a:hover { background: var(--panel-2); color: var(--text); }
+#sidebar nav a.active { background: var(--panel-2); color: var(--accent-2); border-left-color: var(--accent-2); }
+/* Main */
+#main { flex: 1; padding: 24px 32px; overflow-x: hidden; }
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.page-header h1 { font-size: 22px; }
+.page-header .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { filter: brightness(1.15); }
+.btn.ghost { background: var(--panel-2); border: 1px solid var(--border); }
+.btn.danger { background: var(--red); }
+.btn.small { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+.btn.cyber { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+/* Cards / stats */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-card .value { font-size: 26px; font-weight: 700; margin-top: 6px; }
+.stat-card .value.green { color: var(--green); }
+.stat-card .value.red { color: var(--red); }
+.stat-card .value.amber { color: var(--amber); }
+.stat-card .value.cyan { color: var(--accent-2); }
+/* Tables */
+.table-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; background: var(--panel-2); position: sticky; top: 0; }
+tr:hover td { background: rgba(59,130,246,0.06); }
+/* Badges */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge.created { background: #334155; color: #cbd5e1; }
+.badge.matching { background: #1e40af; color: #bfdbfe; }
+.badge.offered { background: #7c3aed; color: #ddd6fe; }
+.badge.accepted { background: #065f46; color: #a7f3d0; }
+.badge.in_progress { background: #92400e; color: #fde68a; }
+.badge.delivered { background: #166534; color: #bbf7d0; }
+.badge.cancelled { background: #7f1d1d; color: #fecaca; }
+.badge.expired { background: #374151; color: #9ca3af; }
+.badge.online { background: #166534; color: #bbf7d0; }
+.badge.offline { background: #374151; color: #9ca3af; }
+.badge.on_order { background: #92400e; color: #fde68a; }
+.badge.sent { background: #1e40af; color: #bfdbfe; }
+.badge.accepted { background: #166534; color: #bbf7d0; }
+.badge.declined { background: #7f1d1d; color: #fecaca; }
+.badge.expired { background: #374151; color: #9ca3af; }
+.badge.active { background: #166534; color: #bbf7d0; }
+.badge.good { background: #166534; color: #bbf7d0; }
+.badge.acceptable { background: #92400e; color: #fde68a; }
+.badge.poor { background: #7f1d1d; color: #fecaca; }
+.badge.critical { background: #7f1d1d; color: #fecaca; }
+.badge.high { background: #92400e; color: #fde68a; }
+.badge.normal { background: #334155; color: #cbd5e1; }
+.badge.customer { background: #1e40af; color: #bfdbfe; }
+.badge.driver { background: #065f46; color: #a7f3d0; }
+.badge.admin { background: #7c3aed; color: #ddd6fe; }
+/* Filters */
+.filters { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+select, input[type=text], input[type=number], input[type=datetime-local] {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  outline: none;
+}
+select:focus, input:focus { border-color: var(--accent); }
+/* Modal */
+#modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+#modal-overlay.open { display: flex; }
+#modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 640px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+#modal h3 { margin-bottom: 18px; font-size: 18px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid .full { grid-column: 1 / -1; }
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-field label { font-size: 12px; color: var(--muted); }
+.form-field input, .form-field select { width: 100%; }
+.form-field .hint { font-size: 11px; color: var(--muted); }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+/* Toast */
+#toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--green);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 14px;
+  max-width: 380px;
+  display: none;
+  z-index: 200;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+#toast.error { border-left-color: var(--red); }
+#toast.show { display: block; animation: slideIn 0.2s; }
+@keyframes slideIn { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* AI results */
+.ai-result { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+.ai-result pre { white-space: pre-wrap; word-break: break-word; font-size: 12px; color: #cbd5e1; margin-top: 8px; max-height: 320px; overflow-y: auto; }
+.ai-result .title { font-size: 13px; font-weight: 600; color: var(--accent-2); }
+.empty { color: var(--muted); padding: 24px; text-align: center; font-size: 13px; }
+.mono { font-family: Consolas, monospace; font-size: 12px; color: var(--muted); }
+.actions-cell { display: flex; gap: 6px; }
+.mt-12 { margin-top: 12px; }
+.mt-24 { margin-top: 24px; }
+.loading { color: var(--muted); font-size: 13px; padding: 20px; }
+.page { display: none; }
+.page.active { display: block; }
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="logo">🚛 Jetkiz<small>Freight Management + AI Engine</small></div>
+  <nav id="nav">
+    <a href="#" data-page="dashboard" class="active">📊 Дашборд</a>
+    <a href="#" data-page="orders">📦 Заказы</a>
+    <a href="#" data-page="users">👤 Пользователи</a>
+    <a href="#" data-page="drivers">🚚 Водители</a>
+    <a href="#" data-page="customers">🏢 Клиенты</a>
+    <a href="#" data-page="offers">✉️ Предложения</a>
+    <a href="#" data-page="ltl">🧩 LTL-группы</a>
+    <a href="#" data-page="tracking">📍 Трекинг</a>
+    <a href="#" data-page="weather">🌤 Погода</a>
+    <a href="#" data-page="settlements">🗺 Населённые пункты</a>
+    <a href="#" data-page="history">🕓 История статусов</a>
+    <a href="#" data-page="ai">🤖 AI-рекомендации</a>
+  </nav>
+</aside>
+
+<main id="main">
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div>
+        <h1>Дашборд</h1>
+        <div class="sub" id="dash-status">Подключение к API...</div>
+      </div>
+      <button class="btn ghost" onclick="loadDashboard()">🔄 Обновить</button>
+    </div>
+    <div class="stats-grid" id="dash-stats"></div>
+    <div class="page-header"><h2 style="font-size:17px">Рекомендации AI-движка</h2></div>
+    <div id="dash-insights"></div>
+  </div>
+
+  <!-- ORDERS -->
+  <div class="page" id="page-orders">
+    <div class="page-header">
+      <div><h1>Заказы</h1><div class="sub">Заказы на грузоперевозки по Мангистауской области</div></div>
+      <button class="btn" onclick="openOrderModal()">+ Новый заказ</button>
+    </div>
+    <div class="filters">
+      <select id="order-status-filter" onchange="loadOrders()">
+        <option value="">Все статусы</option>
+        <option>created</option><option>matching</option><option>offered</option><option>accepted</option>
+        <option>in_progress</option><option>delivered</option><option>cancelled</option><option>expired</option>
+      </select>
+      <button class="btn ghost small" onclick="loadOrders()">Фильтровать</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>ID</th><th>Маршрут</th><th>Груз</th><th>Приоритет</th><th>Цена, ₸</th><th>Статус</th><th>Дата</th><th>Действия</th>
+      </tr></thead>
+      <tbody id="orders-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- USERS -->
+  <div class="page" id="page-users">
+    <div class="page-header">
+      <div><h1>Пользователи</h1><div class="sub">Водители, клиенты и администраторы</div></div>
+      <button class="btn" onclick="openUserModal()">+ Новый пользователь</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Телефон</th><th>Имя</th><th>Роль</th><th>Статус профиля</th><th>Активен</th><th>Действия</th></tr></thead>
+      <tbody id="users-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- DRIVERS -->
+  <div class="page" id="page-drivers">
+    <div class="page-header">
+      <div><h1>Водители</h1><div class="sub">Профили водителей и их транспорт</div></div>
+      <button class="btn" onclick="openDriverModal()">+ Новый водитель</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Водитель (user)</th><th>Транспорт</th><th>Номер</th><th>Тип</th><th>Грузоподъёмность</th><th>Холодильник</th><th>Статус</th><th>Рейтинг ✅/❌</th><th>Действия</th></tr></thead>
+      <tbody id="drivers-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- CUSTOMERS -->
+  <div class="page" id="page-customers">
+    <div class="page-header">
+      <div><h1>Клиенты</h1><div class="sub">Компании и отправители грузов</div></div>
+      <button class="btn" onclick="openCustomerModal()">+ Новый клиент</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Компания</th><th>Пользователь</th><th>Населённый пункт</th><th>Тип бизнеса</th><th>Действия</th></tr></thead>
+      <tbody id="customers-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- OFFERS -->
+  <div class="page" id="page-offers">
+    <div class="page-header">
+      <div><h1>Предложения водителям</h1><div class="sub">Офферы на заказы и LTL-группы</div></div>
+      <button class="btn" onclick="openOfferModal()">+ Новое предложение</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Заказ</th><th>LTL-группа</th><th>Водитель</th><th>Статус</th><th>Отправлено</th><th>Ответ</th><th>Действия</th></tr></thead>
+      <tbody id="offers-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- LTL -->
+  <div class="page" id="page-ltl">
+    <div class="page-header">
+      <div><h1>LTL-группы</h1><div class="sub">Консолидация сборных грузов (менее грузовика)</div></div>
+      <button class="btn" onclick="openLtlModal()">+ Новая группа</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Статус</th><th>Вес, кг</th><th>Объём, м³</th><th>Точка A</th><th>Точка B</th><th>Создана</th><th>Действия</th></tr></thead>
+      <tbody id="ltl-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- TRACKING -->
+  <div class="page" id="page-tracking">
+    <div class="page-header">
+      <div><h1>Трекинг</h1><div class="sub">GPS-точки водителей (с поддержкой оффлайн-синхронизации)</div></div>
+      <div>
+        <button class="btn ghost small" onclick="trackingSync()">🔄 Синхронизация</button>
+        <button class="btn ghost small" onclick="trackingGaps()">⚠️ Провалы GPS</button>
+        <button class="btn" onclick="openTrackingModal()">+ Точка</button>
+      </div>
+    </div>
+    <div id="tracking-ai"></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Водитель</th><th>Заказ</th><th>Координаты</th><th>На устройстве</th><th>Получено сервером</th></tr></thead>
+      <tbody id="tracking-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- WEATHER -->
+  <div class="page" id="page-weather">
+    <div class="page-header">
+      <div><h1>Погода</h1><div class="sub">Снимки погоды по региону (пыльные бури, ветер)</div></div>
+      <div>
+        <button class="btn ghost small" onclick="weatherAnalyze()">🤖 AI-анализ рисков</button>
+        <button class="btn" onclick="openWeatherModal()">+ Снимок</button>
+      </div>
+    </div>
+    <div id="weather-ai"></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Регион (lat,lng)</th><th>Темп, °C</th><th>Ветер, м/с</th><th>Пылевая буря</th><th>Снимок</th></tr></thead>
+      <tbody id="weather-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- SETTLEMENTS -->
+  <div class="page" id="page-settlements">
+    <div class="page-header">
+      <div><h1>Населённые пункты</h1><div class="sub">База населённых пунктов Мангистау</div></div>
+      <button class="btn" onclick="openSettlementModal()">+ Населённый пункт</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Название</th><th>Широта</th><th>Долгота</th><th>Действия</th></tr></thead>
+      <tbody id="settlements-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="page" id="page-history">
+    <div class="page-header">
+      <div><h1>История статусов</h1><div class="sub">Журнал смены статусов заказов</div></div>
+    </div>
+    <div class="filters">
+      <input type="text" id="history-order-filter" placeholder="ID заказа (UUID)" style="width:320px">
+      <button class="btn ghost small" onclick="loadHistory()">Показать</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Заказ</th><th>Статус</th><th>Кто изменил</th><th>Когда</th></tr></thead>
+      <tbody id="history-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- AI -->
+  <div class="page" id="page-ai">
+    <div class="page-header">
+      <div><h1>AI-рекомендации</h1><div class="sub">Ценообразование, консолидация, обратные рейсы, погодные риски</div></div>
+    </div>
+    <div class="ai-result">
+      <div class="title">🤖 Статус движка</div>
+      <pre id="ai-health">загрузка...</pre>
+    </div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>ID заказа</label>
+        <input type="text" id="ai-order-id" placeholder="UUID заказа">
+      </div>
+      <div class="form-field">
+        <label>ID водителя</label>
+        <input type="text" id="ai-driver-id" placeholder="UUID водителя">
+      </div>
+    </div>
+    <div class="mt-12" style="display:flex; gap:8px; flex-wrap:wrap">
+      <button class="btn cyber small" onclick="aiPriceRecommend()">💰 Рекомендовать цену</button>
+      <button class="btn ghost small" onclick="aiPriceAnalyze()">📈 Анализ цены</button>
+      <button class="btn ghost small" onclick="aiPriceRecalculate()">🔄 Пересчитать все</button>
+      <button class="btn cyber small" onclick="aiConsolidate()">🧩 Консолидация</button>
+      <button class="btn ghost small" onclick="aiConsolidateCreate()">🧩 Создать LTL-группу</button>
+      <button class="btn cyber small" onclick="aiBackhaul()">🔁 Обратный рейс</button>
+      <button class="btn ghost small" onclick="aiWeatherEta()">🌤 ETA с учётом погоды</button>
+      <button class="btn ghost small" onclick="aiOrderCreated()">📦 Событие: заказ создан</button>
+      <button class="btn ghost small" onclick="aiOrderDelivered()">✅ Событие: заказ доставлен</button>
+    </div>
+    <div id="ai-results" class="mt-24"></div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div id="modal">
+    <h3 id="modal-title">Форма</h3>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn" id="modal-submit" onclick="modalSubmit()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+// ============ КОНФИГУРАЦИЯ ============
+const API = 'http://127.0.0.1:8000';
+
+// ============ УТИЛИТЫ ============
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function toast(msg, isError = false) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'show' + (isError ? ' error' : '');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.className = '', 3500);
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    ...opts,
+  });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const body = await res.json();
+      detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail || body);
+    } catch (e) {}
+    throw new Error(`HTTP ${res.status}: ${detail}`);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+const badge = (cls, label) => `<span class="badge ${esc(cls)}">${esc(label)}</span>`;
+const short = id => id ? esc(String(id).slice(0, 8)) + '…' : '—';
+const fmtDate = d => d ? new Date(d).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+const fmtNum = n => n == null ? '—' : Number(n).toLocaleString('ru-RU');
+const userLabel = u => u ? `${esc(u.full_name)} (${esc(u.phone)})` : '—';
+
+// ============ НАВИГАЦИЯ ============
+let currentPage = 'dashboard';
+document.querySelectorAll('#nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    switchPage(a.dataset.page);
+  });
+});
+
+function switchPage(page) {
+  currentPage = page;
+  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+  const loaders = {
+    dashboard: loadDashboard, orders: loadOrders, users: loadUsers, drivers: loadDrivers,
+    customers: loadCustomers, offers: loadOffers, ltl: loadLtl, tracking: loadTracking,
+    weather: loadWeather, settlements: loadSettlements, history: loadHistory, ai: loadAi,
+  };
+  (loaders[page] || (() => {}))();
+}
+
+// ============ КЭШ ПОЛЬЗОВАТЕЛЕЙ ============
+let usersCache = [];
+async function getUsers() {
+  if (!usersCache.length) usersCache = await api('/users/');
+  return usersCache;
+}
+function cacheInvalidate() { usersCache = []; }
+
+// ============ DASHBOARD ============
+async function loadDashboard() {
+  $('#dash-status').textContent = 'Подключение к API...';
+  const grid = $('#dash-stats');
+  grid.innerHTML = '<div class="loading">Загрузка...</div>';
+  $('#dash-insights').innerHTML = '';
+  try {
+    const [health, users, orders, drivers, customers, offers, insights] = await Promise.all([
+      api('/health'), api('/users/'), api('/orders/'), api('/driver-profiles/'),
+      api('/customer-profiles/'), api('/order-offers/'), api('/ai/insights/dashboard'),
+    ]);
+    $('#dash-status').innerHTML = `API: <b style="color:var(--green)">${health.status}</b> · ${users.length} пользователей · ${orders.length} заказов · ${insights.total_recommendations} рекомендаций AI`;
+    const delivered = orders.filter(o => o.status === 'delivered').length;
+    const inProgress = orders.filter(o => o.status === 'in_progress' || o.status === 'accepted').length;
+    const activeDrivers = drivers.filter(d => d.current_status === 'online').length;
+    grid.innerHTML = `
+      <div class="stat-card"><div class="label">Заказы</div><div class="value cyan">${orders.length}</div></div>
+      <div class="stat-card"><div class="label">Доставлено</div><div class="value green">${delivered}</div></div>
+      <div class="stat-card"><div class="label">В работе</div><div class="value amber">${inProgress}</div></div>
+      <div class="stat-card"><div class="label">Водители онлайн</div><div class="value green">${activeDrivers}</div></div>
+      <div class="stat-card"><div class="label">Клиенты</div><div class="value cyan">${customers.length}</div></div>
+      <div class="stat-card"><div class="label">Предложения</div><div class="value">${offers.length}</div></div>
+    `;
+    const bd = insights.capability_breakdown || {};
+    const recent = insights.recent_recommendations || [];
+    const html = [];
+    if (recent.length) {
+      html.push(`<div class="ai-result"><div class="title">Последние ${recent.length} событий</div><pre>${esc(JSON.stringify(recent, null, 2))}</pre></div>`);
+    }
+    html.push(`<div class="ai-result"><div class="title">Разбивка по возможностям</div><pre>${esc(JSON.stringify(bd, null, 2))}</pre></div>`);
+    $('#dash-insights').innerHTML = html.join('');
+  } catch (e) {
+    $('#dash-status').innerHTML = `<b style="color:var(--red)">API недоступен: ${esc(e.message)}</b>`;
+    grid.innerHTML = `<div class="empty">Запустите бэкенд: <span class="mono">python main.py</span> (или uvicorn main:app) на порту 8000</div>`;
+  }
+}
+
+// ============ ORDERS ============
+async function loadOrders() {
+  const status = $('#order-status-filter').value;
+  const q = status ? '?status=' + encodeURIComponent(status) : '';
+  const [orders, users] = await Promise.all([api('/orders/' + q), getUsers()]);
+  $('#orders-tbody').innerHTML = orders.map(o => `
+    <tr>
+      <td class="mono">${short(o.id)}</td>
+      <td><div>${esc(o.point_a_address)}</div><div class="mono" style="color:var(--muted)">→ ${esc(o.point_b_address)}</div></td>
+      <td>${fmtNum(o.cargo_weight_kg)} кг / ${fmtNum(o.cargo_volume_m3)} м³</td>
+      <td>${badge(o.priority_level, o.priority_level)}</td>
+      <td>${o.price_offer ? fmtNum(o.price_offer) + ' ₸' : '—'}</td>
+      <td>${badge(o.status, o.status)}</td>
+      <td>${fmtDate(o.created_at)}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn small ghost" onclick="changeOrderStatus('${o.id}')">🚦</button>
+          <button class="btn small ghost" onclick="aiPriceForOrder('${o.id}')">💰</button>
+        </div>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="8" class="empty">Заказов нет</td></tr>';
+}
+
+const ORDER_STATUS_TRANSITIONS = {
+  created: ['matching', 'cancelled', 'expired'],
+  matching: ['offered', 'cancelled', 'expired'],
+  offered: ['accepted', 'cancelled', 'expired'],
+  accepted: ['in_progress', 'cancelled', 'expired'],
+  in_progress: ['delivered', 'cancelled', 'expired'],
+  delivered: [], cancelled: [], expired: [],
+};
+
+async function changeOrderStatus(orderId) {
+  const order = await api('/orders/' + orderId);
+  const allowed = ORDER_STATUS_TRANSITIONS[order.status] || [];
+  if (!allowed.length) return toast(`Заказ в терминальном статусе «${order.status}»`, true);
+  const choice = prompt(`Текущий статус: ${order.status}\nДоступные переходы:\n${allowed.join(', ')}\n\nВведите новый статус:`);
+  if (!choice) return;
+  if (!allowed.includes(choice)) return toast(`Недопустимый переход из «${order.status}» в «${choice}»`, true);
+  try {
+    await api(`/orders/${orderId}/status`, { method: 'PUT', body: JSON.stringify({ new_status: choice }) });
+    toast(`Статус изменён: ${order.status} → ${choice}`);
+    loadOrders(); loadHistory();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function aiPriceForOrder(orderId) {
+  try {
+    const r = await api('/ai/pricing/recommend', { method: 'POST', body: JSON.stringify({ order_id: orderId }) });
+    showAiResult('💰 Рекомендация цены для ' + short(orderId), r);
+  } catch (e) { toast(e.message, true); }
+}
+
+function openOrderModal(orderId) {
+  openModal('Новый заказ', buildOrderForm(), async () => {
+    const f = readForm('order-form');
+    const body = {
+      customer_id: f.customer_id,
+      point_a_lat: parseFloat(f.point_a_lat), point_a_lng: parseFloat(f.point_a_lng),
+      point_b_lat: parseFloat(f.point_b_lat), point_b_lng: parseFloat(f.point_b_lng),
+      point_a_address: f.point_a_address, point_b_address: f.point_b_address,
+      cargo_weight_kg: parseFloat(f.cargo_weight_kg), cargo_volume_m3: parseFloat(f.cargo_volume_m3),
+      is_perishable: f.is_perishable === 'on',
+      is_fragile: f.is_fragile === 'on',
+      packaging_quality: f.packaging_quality || null,
+      packaging_photo_url: f.packaging_photo_url || null,
+      cargo_description: f.cargo_description || null,
+      priority_level: f.priority_level,
+      is_social_priority: f.is_social_priority === 'on',
+      price_offer: f.price_offer ? parseFloat(f.price_offer) : null,
+      requested_pickup_time: f.requested_pickup_time || null,
+      estimated_delivery_minutes: f.estimated_delivery_minutes ? parseFloat(f.estimated_delivery_minutes) : null,
+    };
+    const created = await api('/orders/', { method: 'POST', body: JSON.stringify(body) });
+    toast('Заказ создан: ' + created.id);
+    closeModal(); loadOrders();
+  });
+}
+
+function buildOrderForm() {
+  return `
+  <form id="order-form" class="form-grid" onsubmit="return false">
+    <div class="form-field full">
+      <label>Клиент (customer_id) *</label>
+      <select name="customer_id" required>
+        <option value="">Выберите пользователя-клиента...</option>
+        ${usersCache.filter(u => u.role === 'customer').map(u => `<option value="${u.id}">${esc(u.full_name)} (${esc(u.phone)})</option>`).join('')}
+      </select>
+      <div class="hint">Если клиентов нет — создайте пользователя с ролью customer</div>
+    </div>
+    <div class="form-field full"><label>Адрес отправки (A) *</label><input name="point_a_address" required placeholder="г. Актау, ул. ..."></div>
+    <div class="form-field"><label>Широта A *</label><input name="point_a_lat" type="number" step="any" required placeholder="43.65"></div>
+    <div class="form-field"><label>Долгота A *</label><input name="point_a_lng" type="number" step="any" required placeholder="51.15"></div>
+    <div class="form-field full"><label>Адрес назначения (B) *</label><input name="point_b_address" required placeholder="г. Жанаозен, ул. ..."></div>
+    <div class="form-field"><label>Широта B *</label><input name="point_b_lat" type="number" step="any" required placeholder="43.34"></div>
+    <div class="form-field"><label>Долгота B *</label><input name="point_b_lng" type="number" step="any" required placeholder="52.86"></div>
+    <div class="form-field"><label>Вес, кг *</label><input name="cargo_weight_kg" type="number" step="any" min="0.01" required></div>
+    <div class="form-field"><label>Объём, м³ *</label><input name="cargo_volume_m3" type="number" step="any" min="0.01" required></div>
+    <div class="form-field"><label>Приоритет</label>
+      <select name="priority_level"><option>normal</option><option>high</option><option>critical</option></select>
+    </div>
+    <div class="form-field"><label>Качество упаковки</label>
+      <select name="packaging_quality"><option value="">—</option><option>good</option><option>acceptable</option><option>poor</option></select>
+    </div>
+    <div class="form-field"><label>Описание груза</label><input name="cargo_description" placeholder="Хрупкий груз, электроника..."></div>
+    <div class="form-field"><label>Цена предложения, ₸</label><input name="price_offer" type="number" step="any" min="0.01"></div>
+    <div class="form-field"><label>Оценка доставки, мин</label><input name="estimated_delivery_minutes" type="number" step="any" min="1"></div>
+    <div class="form-field"><label>Время забора</label><input name="requested_pickup_time" type="datetime-local"></div>
+    <div class="form-field full">
+      <label style="display:flex; gap:14px; align-items:center">
+        <span><input type="checkbox" name="is_perishable"> Скоропортящийся</span>
+        <span><input type="checkbox" name="is_fragile"> Хрупкий</span>
+        <span><input type="checkbox" name="is_social_priority"> Соц. приоритет</span>
+      </label>
+    </div>
+  </form>`;
+}
+
+// ============ USERS ============
+async function loadUsers() {
+  const users = await api('/users/');
+  usersCache = users;
+  $('#users-tbody').innerHTML = users.map(u => `
+    <tr>
+      <td class="mono">${short(u.id)}</td>
+      <td>${esc(u.phone)}</td>
+      <td>${esc(u.full_name)}</td>
+      <td>${badge(u.role, u.role)}</td>
+      <td>${badge(u.profile_status, u.profile_status)}</td>
+      <td>${u.is_active ? '✅' : '❌'}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn small ghost" onclick="openUserModal('${u.id}')">✏️</button>
+          <button class="btn small danger" onclick="deleteUser('${u.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="7" class="empty">Пользователей нет</td></tr>';
+}
+
+function openUserModal(userId) {
+  const u = usersCache.find(x => x.id === userId);
+  openModal(u ? 'Редактировать пользователя' : 'Новый пользователь', `
+    <form id="user-form" class="form-grid" onsubmit="return false">
+      <div class="form-field"><label>Телефон *</label><input name="phone" required value="${esc(u?.phone || '')}" placeholder="+7 700 000 00 00"></div>
+      <div class="form-field"><label>ФИО *</label><input name="full_name" required value="${esc(u?.full_name || '')}"></div>
+      <div class="form-field"><label>Роль</label>
+        <select name="role">${['customer','driver','admin'].map(r => `<option ${u?.role === r ? 'selected' : ''}>${r}</option>`).join('')}</select>
+      </div>
+      <div class="form-field"><label>Статус профиля</label>
+        <select name="profile_status">${['incomplete','complete'].map(s => `<option ${u?.profile_status === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
+      </div>
+      <div class="form-field full"><label>Активен</label>
+        <label style="display:flex; gap:8px; align-items:center"><input type="checkbox" name="is_active" ${u?.is_active !== false ? 'checked' : ''}> Пользователь активен</label>
+      </div>
+    </form>`, async () => {
+    const f = readForm('user-form');
+    const body = { phone: f.phone, full_name: f.full_name, role: f.role, profile_status: f.profile_status, is_active: f.is_active === 'on' };
+    if (u) await api('/users/' + u.id, { method: 'PUT', body: JSON.stringify(body) });
+    else await api('/users/', { method: 'POST', body: JSON.stringify(body) });
+    toast(u ? 'Пользователь обновлён' : 'Пользователь создан');
+    cacheInvalidate(); closeModal(); loadUsers();
+  });
+}
+
+async function deleteUser(userId) {
+  if (!confirm('Удалить пользователя?')) return;
+  await api('/users/' + userId, { method: 'DELETE' });
+  toast('Пользователь удалён'); cacheInvalidate(); loadUsers();
+}
+
+// ============ DRIVERS ============
+async function loadDrivers() {
+  const [drivers, users] = await Promise.all([api('/driver-profiles/'), getUsers()]);
+  $('#drivers-tbody').innerHTML = drivers.map(d => {
+    const u = users.find(x => x.id === d.user_id);
+    return `<tr>
+      <td class="mono">${short(d.id)}</td>
+      <td>${userLabel(u)}</td>
+      <td>${esc(d.vehicle_brand)}</td>
+      <td class="mono">${esc(d.vehicle_plate_number)}</td>
+      <td>${esc(d.vehicle_type)}</td>
+      <td>${fmtNum(d.capacity_kg)} кг / ${fmtNum(d.capacity_m3)} м³</td>
+      <td>${d.has_refrigerator ? '✅' : '—'}</td>
+      <td>${badge(d.current_status, d.current_status)}</td>
+      <td>${d.rating_completed_trips} / ${d.rating_failed_trips}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn small ghost" onclick="openDriverModal('${d.id}')">✏️</button>
+          <button class="btn small ghost" onclick="aiBackhaulForDriver('${d.id}')">🔁</button>
+          <button class="btn small danger" onclick="deleteDriver('${d.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10" class="empty">Водителей нет</td></tr>';
+}
+
+async function aiBackhaulForDriver(driverId) {
+  try {
+    const r = await api(`/ai/backhaul/find/${driverId}`, { method: 'POST' });
+    showAiResult('🔁 Обратные рейсы для ' + short(driverId), r);
+  } catch (e) { toast(e.message, true); }
+}
+
+let driversCache = [];
+async function loadDrivers() {
+  const [drivers, users] = await Promise.all([api('/driver-profiles/'), getUsers()]);
+  driversCache = drivers;
+  $('#drivers-tbody').innerHTML = drivers.map(d => {
+    const u = users.find(x => x.id === d.user_id);
+    return `<tr>
+      <td class="mono">${short(d.id)}</td>
+      <td>${userLabel(u)}</td>
+      <td>${esc(d.vehicle_brand)}</td>
+      <td class="mono">${esc(d.vehicle_plate_number)}</td>
+      <td>${esc(d.vehicle_type)}</td>
+      <td>${fmtNum(d.capacity_kg)} кг / ${fmtNum(d.capacity_m3)} м³</td>
+      <td>${d.has_refrigerator ? '✅' : '—'}</td>
+      <td>${badge(d.current_status, d.current_status)}</td>
+      <td>${d.rating_completed_trips} / ${d.rating_failed_trips}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn small ghost" onclick="openDriverModal('${d.id}')">✏️</button>
+          <button class="btn small ghost" onclick="aiBackhaulForDriver('${d.id}')">🔁</button>
+          <button class="btn small danger" onclick="deleteDriver('${d.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10" class="empty">Водителей нет</td></tr>';
+}
+
+function openDriverModal(driverId) {
+  const d = driverId ? driversCache.find(x => x.id === driverId) : null;
+  const vtypeOpts = ['tent','flatbed','pickup','box_truck'].map(t => `<option ${d?.vehicle_type === t ? 'selected' : ''}>${t}</option>`).join('');
+  const cstatusOpts = ['offline','online','on_order'].map(s => `<option ${d?.current_status === s ? 'selected' : ''}>${s}</option>`).join('');
+  openModal(d ? 'Редактировать водителя' : 'Новый водитель', `
+    <form id="driver-form" class="form-grid" onsubmit="return false">
+      ${d ? `<div class="form-field full"><label>Профиль</label><input value="ID: ${d.id}" disabled></div>` : `
+      <div class="form-field full">
+        <label>Пользователь (user_id) *</label>
+        <select name="user_id" required>
+          <option value="">Выберите пользователя-водителя...</option>
+          ${usersCache.filter(u => u.role === 'driver').map(u => `<option value="${u.id}">${esc(u.full_name)} (${esc(u.phone)})</option>`).join('')}
+        </select>
+      </div>`}
+      <div class="form-field"><label>Марка ТС *</label><input name="vehicle_brand" required value="${esc(d?.vehicle_brand || '')}" placeholder="ГАЗель Next"></div>
+      <div class="form-field"><label>Гос. номер *</label><input name="vehicle_plate_number" required value="${esc(d?.vehicle_plate_number || '')}" placeholder="12A345BC"></div>
+      <div class="form-field"><label>Грузоподъёмность, кг *</label><input name="capacity_kg" type="number" min="1" required value="${d?.capacity_kg || ''}"></div>
+      <div class="form-field"><label>Объём кузова, м³ *</label><input name="capacity_m3" type="number" min="1" required value="${d?.capacity_m3 || ''}"></div>
+      <div class="form-field"><label>Тип ТС</label><select name="vehicle_type">${vtypeOpts}</select></div>
+      <div class="form-field"><label>Статус</label><select name="current_status">${cstatusOpts}</select></div>
+      <div class="form-field full">
+        <label style="display:flex; gap:14px; align-items:center">
+          <span><input type="checkbox" name="has_refrigerator" ${d?.has_refrigerator ? 'checked' : ''}> Рефрижератор</span>
+          <span><input type="checkbox" name="is_verified" ${d?.is_verified ? 'checked' : ''}> Верифицирован</span>
+        </label>
+      </div>
+    </form>`, async () => {
+    const f = readForm('driver-form');
+    const body = {
+      vehicle_brand: f.vehicle_brand,
+      capacity_kg: parseFloat(f.capacity_kg), capacity_m3: parseFloat(f.capacity_m3),
+      has_refrigerator: f.has_refrigerator === 'on', vehicle_type: f.vehicle_type,
+      is_verified: f.is_verified === 'on', current_status: f.current_status,
+    };
+    if (d) {
+      await api('/driver-profiles/' + d.id, { method: 'PUT', body: JSON.stringify(body) });
+      toast('Водитель обновлён');
+    } else {
+      await api('/driver-profiles/', { method: 'POST', body: JSON.stringify({ ...body, user_id: f.user_id, vehicle_plate_number: f.vehicle_plate_number }) });
+      toast('Водитель создан');
+    }
+    closeModal(); loadDrivers();
+  });
+}
+
+async function deleteDriver(id) {
+  if (!confirm('Удалить профиль водителя?')) return;
+  await api('/driver-profiles/' + id, { method: 'DELETE' });
+  toast('Удалено'); loadDrivers();
+}
+
+// ============ CUSTOMERS ============
+async function loadCustomers() {
+  const [customers, users] = await Promise.all([api('/customer-profiles/'), getUsers()]);
+  customersCache = customers;
+  $('#customers-tbody').innerHTML = customers.map(c => {
+    const u = users.find(x => x.id === c.user_id);
+    return `<tr>
+      <td class="mono">${short(c.id)}</td>
+      <td>${esc(c.company_name || '—')}</td>
+      <td>${userLabel(u)}</td>
+      <td>${esc(c.settlement)}</td>
+      <td>${esc(c.business_type)}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn small ghost" onclick="openCustomerModal('${c.id}')">✏️</button>
+          <button class="btn small danger" onclick="deleteCustomer('${c.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Клиентов нет</td></tr>';
+}
+
+function openCustomerModal(customerId) {
+  const c = customerId ? customersCache.find(x => x.id === customerId) : null;
+  openModal(c ? 'Редактировать клиента' : 'Новый клиент', `
+    <form id="customer-form" class="form-grid" onsubmit="return false">
+      ${c ? '' : `
+      <div class="form-field full">
+        <label>Пользователь (user_id) *</label>
+        <select name="user_id" required>
+          <option value="">Выберите пользователя-клиента...</option>
+          ${usersCache.filter(u => u.role === 'customer').map(u => `<option value="${u.id}">${esc(u.full_name)} (${esc(u.phone)})</option>`).join('')}
+        </select>
+      </div>`}
+      <div class="form-field"><label>Компания</label><input name="company_name" value="${esc(c?.company_name || '')}"></div>
+      <div class="form-field"><label>Населённый пункт *</label><input name="settlement" required value="${esc(c?.settlement || '')}" placeholder="Актау"></div>
+      <div class="form-field full"><label>Тип бизнеса *</label><input name="business_type" required value="${esc(c?.business_type || '')}" placeholder="Торговля, производство..."></div>
+    </form>`, async () => {
+    const f = readForm('customer-form');
+    const body = { company_name: f.company_name || null, settlement: f.settlement, business_type: f.business_type };
+    if (c) await api('/customer-profiles/' + c.id, { method: 'PUT', body: JSON.stringify(body) });
+    else await api('/customer-profiles/', { method: 'POST', body: JSON.stringify({ ...body, user_id: f.user_id }) });
+    toast(c ? 'Клиент обновлён' : 'Клиент создан'); closeModal(); loadCustomers();
+  });
+}
+
+async function deleteCustomer(id) {
+  if (!confirm('Удалить клиента?')) return;
+  await api('/customer-profiles/' + id, { method: 'DELETE' });
+  toast('Удалено'); loadCustomers();
+}
+let customersCache = [];
+
+// ============ OFFERS ============
+async function loadOffers() {
+  const [offers, users] = await Promise.all([api('/order-offers/'), getUsers()]);
+  $('#offers-tbody').innerHTML = offers.map(o => {
+    const d = users.find(x => x.id === o.driver_id);
+    return `<tr>
+      <td class="mono">${short(o.id)}</td>
+      <td class="mono">${o.order_id ? short(o.order_id) : '—'}</td>
+      <td class="mono">${o.ltl_group_id ? short(o.ltl_group_id) : '—'}</td>
+      <td>${userLabel(d)}</td>
+      <td>${badge(o.status, o.status)}</td>
+      <td>${fmtDate(o.sent_at)}</td>
+      <td>${fmtDate(o.responded_at)}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn small ghost" onclick="acceptOffer('${o.id}')">✅</button>
+          <button class="btn small ghost" onclick="declineOffer('${o.id}')">❌</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" class="empty">Предложений нет</td></tr>';
+}
+
+async function acceptOffer(id) { await setOfferStatus(id, 'accepted'); }
+async function declineOffer(id) { await setOfferStatus(id, 'declined'); }
+async function setOfferStatus(id, status) {
+  await api('/order-offers/' + id, { method: 'PUT', body: JSON.stringify({ status }) });
+  toast(`Предложение: ${status}`); loadOffers();
+}
+
+function openOfferModal() {
+  openModal('Новое предложение', `
+    <form id="offer-form" class="form-grid" onsubmit="return false">
+      <div class="form-field full"><label>Заказ (order_id) или LTL-группа (ltl_group_id) — ровно одно *</label>
+        <input name="order_id" placeholder="UUID заказа">
+      </div>
+      <div class="form-field full"><input name="ltl_group_id" placeholder="UUID LTL-группы"></div>
+      <div class="form-field full">
+        <label>Водитель (driver_id) *</label>
+        <select name="driver_id" required>
+          <option value="">Выберите водителя...</option>
+          ${usersCache.filter(u => u.role === 'driver').map(u => `<option value="${u.id}">${esc(u.full_name)} (${esc(u.phone)})</option>`).join('')}
+        </select>
+      </div>
+    </form>`, async () => {
+    const f = readForm('offer-form');
+    if (!f.order_id && !f.ltl_group_id) throw new Error('Укажите order_id или ltl_group_id');
+    if (f.order_id && f.ltl_group_id) throw new Error('Можно указать только одно: order_id ИЛИ ltl_group_id');
+    const body = { driver_id: f.driver_id };
+    if (f.order_id) body.order_id = f.order_id;
+    else body.ltl_group_id = f.ltl_group_id;
+    await api('/order-offers/', { method: 'POST', body: JSON.stringify(body) });
+    toast('Предложение отправлено'); closeModal(); loadOffers();
+  });
+}
+
+// ============ LTL ============
+async function loadLtl() {
+  const groups = await api('/ltl-groups/');
+  $('#ltl-tbody').innerHTML = groups.map(g => `
+    <tr>
+      <td class="mono">${short(g.id)}</td>
+      <td>${badge(g.status, g.status)}</td>
+      <td>${fmtNum(g.total_weight_kg)}</td>
+      <td>${fmtNum(g.total_volume_m3)}</td>
+      <td class="mono">${g.point_a_cluster_lat.toFixed(3)}, ${g.point_a_cluster_lng.toFixed(3)}</td>
+      <td class="mono">${g.point_b_cluster_lat.toFixed(3)}, ${g.point_b_cluster_lng.toFixed(3)}</td>
+      <td>${fmtDate(g.created_at)}</td>
+      <td><button class="btn small danger" onclick="deleteLtl('${g.id}')">🗑</button></td>
+    </tr>`).join('') || '<tr><td colspan="8" class="empty">Групп нет</td></tr>';
+}
+
+function openLtlModal() {
+  openModal('Новая LTL-группа', `
+    <form id="ltl-form" class="form-grid" onsubmit="return false">
+      <div class="form-field"><label>Широта кластера A *</label><input name="point_a_cluster_lat" type="number" step="any" required></div>
+      <div class="form-field"><label>Долгота кластера A *</label><input name="point_a_cluster_lng" type="number" step="any" required></div>
+      <div class="form-field"><label>Широта кластера B *</label><input name="point_b_cluster_lat" type="number" step="any" required></div>
+      <div class="form-field"><label>Долгота кластера B *</label><input name="point_b_cluster_lng" type="number" step="any" required></div>
+    </form>`, async () => {
+    const f = readForm('ltl-form');
+    await api('/ltl-groups/', { method: 'POST', body: JSON.stringify({
+      point_a_cluster_lat: parseFloat(f.point_a_cluster_lat), point_a_cluster_lng: parseFloat(f.point_a_cluster_lng),
+      point_b_cluster_lat: parseFloat(f.point_b_cluster_lat), point_b_cluster_lng: parseFloat(f.point_b_cluster_lng),
+    })});
+    toast('Группа создана'); closeModal(); loadLtl();
+  });
+}
+
+async function deleteLtl(id) {
+  if (!confirm('Удалить LTL-группу?')) return;
+  await api('/ltl-groups/' + id, { method: 'DELETE' });
+  toast('Удалено'); loadLtl();
+}
+
+// ============ TRACKING ============
+async function loadTracking() {
+  const [points, users] = await Promise.all([api('/tracking-points/'), getUsers()]);
+  $('#tracking-tbody').innerHTML = points.slice().reverse().map(p => {
+    const d = users.find(x => x.id === p.driver_id);
+    return `<tr>
+      <td class="mono">${short(p.id)}</td>
+      <td>${userLabel(d)}</td>
+      <td class="mono">${p.order_id ? short(p.order_id) : '—'}</td>
+      <td class="mono">${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</td>
+      <td>${fmtDate(p.recorded_at_device)}</td>
+      <td>${fmtDate(p.received_at_server)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Точек нет</td></tr>';
+}
+
+function openTrackingModal() {
+  openModal('Новая точка трекинга', `
+    <form id="tracking-form" class="form-grid" onsubmit="return false">
+      <div class="form-field full">
+        <label>Водитель (driver_id) *</label>
+        <select name="driver_id" required>
+          <option value="">Выберите водителя...</option>
+          ${usersCache.filter(u => u.role === 'driver').map(u => `<option value="${u.id}">${esc(u.full_name)} (${esc(u.phone)})</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field full"><label>Заказ (order_id)</label><input name="order_id" placeholder="UUID заказа (необязательно)"></div>
+      <div class="form-field"><label>Широта *</label><input name="lat" type="number" step="any" required placeholder="43.65"></div>
+      <div class="form-field"><label>Долгота *</label><input name="lng" type="number" step="any" required placeholder="51.15"></div>
+    </form>`, async () => {
+    const f = readForm('tracking-form');
+    const body = { driver_id: f.driver_id, lat: parseFloat(f.lat), lng: parseFloat(f.lng) };
+    if (f.order_id) body.order_id = f.order_id;
+    await api('/tracking-points/', { method: 'POST', body: JSON.stringify(body) });
+    toast('Точка сохранена'); closeModal(); loadTracking();
+  });
+}
+
+async function trackingSync() {
+  try {
+    const r = await api('/tracking/sync', { method: 'POST' });
+    showAiResult('🔄 Результат синхронизации', r, 'tracking-ai');
+  } catch (e) { toast(e.message, true); }
+}
+
+async function trackingGaps() {
+  try {
+    const r = await api('/tracking/gaps');
+    showAiResult('⚠️ Провалы оффлайн-трекинга', r, 'tracking-ai');
+  } catch (e) { toast(e.message, true); }
+}
+
+// ============ WEATHER ============
+async function loadWeather() {
+  const snaps = await api('/weather-snapshots/');
+  $('#weather-tbody').innerHTML = snaps.slice().reverse().map(s => `
+    <tr>
+      <td class="mono">${short(s.id)}</td>
+      <td class="mono">${s.region_point_lat.toFixed(3)}, ${s.region_point_lng.toFixed(3)}</td>
+      <td>${s.temperature_c}°C</td>
+      <td>${s.wind_speed_ms} м/с</td>
+      <td>${s.is_dust_storm_risk ? badge('critical', '⚠️ БУРЯ') : '—'}</td>
+      <td>${fmtDate(s.fetched_at)}</td>
+    </tr>`).join('') || '<tr><td colspan="6" class="empty">Снимков нет</td></tr>';
+}
+
+function openWeatherModal() {
+  openModal('Новый снимок погоды', `
+    <form id="weather-form" class="form-grid" onsubmit="return false">
+      <div class="form-field"><label>Широта региона *</label><input name="region_point_lat" type="number" step="any" required placeholder="43.65"></div>
+      <div class="form-field"><label>Долгота региона *</label><input name="region_point_lng" type="number" step="any" required placeholder="51.15"></div>
+      <div class="form-field"><label>Температура, °C *</label><input name="temperature_c" type="number" step="any" required></div>
+      <div class="form-field"><label>Ветер, м/с *</label><input name="wind_speed_ms" type="number" step="any" min="0" required></div>
+      <div class="form-field full">
+        <label style="display:flex; gap:8px; align-items:center"><input type="checkbox" name="is_dust_storm_risk"> Риск пылевой бури</label>
+      </div>
+    </form>`, async () => {
+    const f = readForm('weather-form');
+    await api('/weather-snapshots/', { method: 'POST', body: JSON.stringify({
+      region_point_lat: parseFloat(f.region_point_lat), region_point_lng: parseFloat(f.region_point_lng),
+      temperature_c: parseFloat(f.temperature_c), wind_speed_ms: parseFloat(f.wind_speed_ms),
+      is_dust_storm_risk: f.is_dust_storm_risk === 'on',
+    })});
+    toast('Снимок сохранён'); closeModal(); loadWeather();
+  });
+}
+
+async function weatherAnalyze() {
+  try {
+    const r = await api('/ai/weather/analyze', { method: 'POST' });
+    showAiResult('🤖 Оценка погодных рисков сети', r, 'weather-ai');
+  } catch (e) { toast(e.message, true); }
+}
+
+// ============ SETTLEMENTS ============
+async function loadSettlements() {
+  const items = await api('/settlements/');
+  $('#settlements-tbody').innerHTML = items.map(s => `
+    <tr>
+      <td class="mono">${short(s.id)}</td>
+      <td>${esc(s.name)}</td>
+      <td class="mono">${s.lat}</td>
+      <td class="mono">${s.lng}</td>
+      <td><button class="btn small danger" onclick="deleteSettlement('${s.id}')">🗑</button></td>
+    </tr>`).join('') || '<tr><td colspan="5" class="empty">Пунктов нет</td></tr>';
+}
+
+function openSettlementModal() {
+  openModal('Новый населённый пункт', `
+    <form id="settlement-form" class="form-grid" onsubmit="return false">
+      <div class="form-field full"><label>Название *</label><input name="name" required placeholder="Актау"></div>
+      <div class="form-field"><label>Широта *</label><input name="lat" type="number" step="any" required></div>
+      <div class="form-field"><label>Долгота *</label><input name="lng" type="number" step="any" required></div>
+    </form>`, async () => {
+    const f = readForm('settlement-form');
+    await api('/settlements/', { method: 'POST', body: JSON.stringify({ name: f.name, lat: parseFloat(f.lat), lng: parseFloat(f.lng) })});
+    toast('Пункт добавлен'); closeModal(); loadSettlements();
+  });
+}
+
+async function deleteSettlement(id) {
+  if (!confirm('Удалить населённый пункт?')) return;
+  await api('/settlements/' + id, { method: 'DELETE' });
+  toast('Удалено'); loadSettlements();
+}
+
+// ============ HISTORY ============
+async function loadHistory() {
+  const orderId = $('#history-order-filter').value.trim();
+  const q = orderId ? '?order_id=' + encodeURIComponent(orderId) : '';
+  const items = await api('/order-status-history/' + q);
+  $('#history-tbody').innerHTML = items.slice().reverse().map(h => `
+    <tr>
+      <td class="mono">${short(h.id)}</td>
+      <td class="mono">${short(h.order_id)}</td>
+      <td>${badge(h.status, h.status)}</td>
+      <td class="mono">${h.changed_by_user_id ? short(h.changed_by_user_id) : '—'}</td>
+      <td>${fmtDate(h.changed_at)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="empty">Истории нет</td></tr>';
+}
+
+// ============ AI PAGE ============
+async function loadAi() {
+  try {
+    const h = await api('/ai/health');
+    $('#ai-health').textContent = JSON.stringify(h, null, 2);
+  } catch (e) { $('#ai-health').textContent = 'Движок недоступен: ' + e.message; }
+}
+
+function needOrderId() {
+  const id = $('#ai-order-id').value.trim();
+  if (!id) { toast('Введите ID заказа на странице AI', true); return null; }
+  return id;
+}
+
+async function aiPriceRecommend() {
+  const id = needOrderId(); if (!id) return;
+  try { showAiResult('💰 Рекомендуемая цена', await api('/ai/pricing/recommend', { method: 'POST', body: JSON.stringify({ order_id: id }) })); }
+  catch (e) { toast(e.message, true); }
+}
+async function aiPriceAnalyze() {
+  const id = needOrderId(); if (!id) return;
+  try { showAiResult('📈 Анализ ценообразования', await api(`/ai/pricing/analyze/${id}`, { method: 'POST' })); }
+  catch (e) { toast(e.message, true); }
+}
+async function aiPriceRecalculate() {
+  try { showAiResult('🔄 Пересчёт цен ожидающих заказов', await api('/ai/pricing/recalculate', { method: 'POST' })); }
+  catch (e) { toast(e.message, true); }
+}
+async function aiConsolidate() {
+  const id = needOrderId(); if (!id) return;
+  try { showAiResult('🧩 Анализ консолидации', await api('/ai/consolidation/analyze', { method: 'POST', body: JSON.stringify({ order_id: id }) })); }
+  catch (e) { toast(e.message, true); }
+}
+async function aiConsolidateCreate() {
+  const id = needOrderId(); if (!id) return;
+  try { showAiResult('🧩 Создание LTL-группы', await api('/ai/consolidation/create', { method: 'POST', body: JSON.stringify({ order_id: id }) })); }
+  catch (e) { toast(e.message, true); }
+}
+async function aiBackhaul() {
+  const id = $('#ai-driver-id').value.trim();
+  if (!id) { toast('Введите ID водителя', true); return; }
+  try { showAiResult('🔁 Поиск обратных рейсов', await api(`/ai/backhaul/find/${id}`, { method: 'POST' })); }
+  catch (e) { toast(e.message, true); }
+}
+async function aiWeatherEta() {
+  const id = needOrderId(); if (!id) return;
+  try { showAiResult('🌤 ETA с учётом погоды', await api(`/ai/weather/eta/${id}`, { method: 'POST' })); }
+  catch (e) { toast(e.message, true); }
+}
+async function aiOrderCreated() {
+  const id = needOrderId(); if (!id) return;
+  try { showAiResult('📦 Событие: заказ создан', await api(`/ai/recommendations/order-created/${id}`, { method: 'POST' })); }
+  catch (e) { toast(e.message, true); }
+}
+async function aiOrderDelivered() {
+  const id = needOrderId(); if (!id) return;
+  try { showAiResult('✅ Событие: заказ доставлен', await api(`/ai/recommendations/order-delivered/${id}`, { method: 'POST' })); }
+  catch (e) { toast(e.message, true); }
+}
+
+function showAiResult(title, data, containerId = 'ai-results') {
+  const wrap = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'ai-result';
+  div.innerHTML = `<div class="title">${esc(title)}</div><pre>${esc(JSON.stringify(data, null, 2))}</pre>`;
+  wrap.prepend(div);
+}
+
+// ============ MODAL ============
+let modalSubmitFn = null;
+function openModal(title, bodyHtml, submitFn) {
+  $('#modal-title').textContent = title;
+  $('#modal-body').innerHTML = bodyHtml;
+  modalSubmitFn = submitFn;
+  $('#modal-overlay').classList.add('open');
+}
+function closeModal() { $('#modal-overlay').classList.remove('open'); modalSubmitFn = null; }
+function readForm(formId) {
+  const form = document.getElementById(formId);
+  const data = {};
+  new FormData(form).forEach((v, k) => data[k] = v);
+  return data;
+}
+async function modalSubmit() {
+  if (!modalSubmitFn) return;
+  try { await modalSubmitFn(); }
+  catch (e) { toast(e.message, true); }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ============ СТАРТ ============
+(async function init() {
+  try {
+    await getUsers();
+  } catch (e) {}
+  loadDashboard();
+})();
+</script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import (
     Boolean, Column, DateTime, Enum, Float, Integer, String, Text, Uuid
@@ -39,5 +40,5 @@ class Order(Base):
     assigned_driver_id = Column(Uuid, nullable=True)
     is_ltl_group = Column(Boolean, default=False, nullable=False)
     ltl_group_id = Column(Uuid, nullable=True)
-    created_at = Column(DateTime(timezone=True), nullable=False)
-    updated_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)

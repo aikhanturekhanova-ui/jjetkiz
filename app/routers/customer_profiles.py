@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/customer-profiles", tags=["customer-profiles"])
 
 
 def get_db():
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[CustomerProfileSchema])
@@ -43,7 +43,6 @@ async def create_customer_profile(profile_data: CustomerProfileCreate, db: Sessi
         raise HTTPException(status_code=400, detail="User already has a customer profile")
     
     profile = CustomerProfileModel(
-        id=profile_data.id if profile_data.id else UUID(int=0),
         user_id=profile_data.user_id,
         company_name=profile_data.company_name,
         settlement=profile_data.settlement,

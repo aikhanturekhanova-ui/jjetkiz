@@ -1,8 +1,9 @@
-from typing import Optional
+﻿from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
+from datetime import datetime
 
 from app.schemas.order_schema import OrderSchema, OrderCreate, OrderUpdate, OrderStatus, PackagingQuality
 from app.models.order_model import Order as OrderModel
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 
 
 def get_db():
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[OrderSchema])
@@ -48,7 +49,6 @@ async def create_order(order_data: OrderCreate, db: Session = Depends(get_db)):
     
     # Check exactly one of order_id or ltl_group_id is set (for offers, but orders always have customer_id)
     order = OrderModel(
-        id=order_data.id if order_data.id else UUID(int=0),
         customer_id=order_data.customer_id,
         status=order_data.status or OrderStatus.created,
         point_a_lat=order_data.point_a_lat,
@@ -118,7 +118,7 @@ async def update_order_status(order_id: UUID, new_status: str, db: Session = Dep
         "expired": [],  # terminal
     }
     
-    current = order.status.value
+    current = order.status.value if hasattr(order.status, "value") else str(order.status)
     if status_enum not in valid_transitions.get(current, []):
         raise HTTPException(
             status_code=400,
@@ -129,7 +129,6 @@ async def update_order_status(order_id: UUID, new_status: str, db: Session = Dep
     # Add to status history
     from app.models.order_status_history_model import OrderStatusHistory as StatusHistoryModel
     history = StatusHistoryModel(
-        id=UUID(int=0),
         order_id=order.id,
         status=status_enum,
         changed_at=datetime.utcnow(),

@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/tracking-points", tags=["tracking-points"])
 
 
 def get_db():
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[TrackingPointSchema])
@@ -42,10 +42,13 @@ async def get_tracking_point(point_id: UUID, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=TrackingPointSchema, status_code=status.HTTP_201_CREATED)
 async def create_tracking_point(point_data: TrackingPointCreate, db: Session = Depends(get_db)):
-    # Validate driver exists
+    # Validate driver exists (accepts user id or driver profile id)
     driver = db.query(UserModel).filter(UserModel.id == point_data.driver_id).first()
     if not driver:
-        raise HTTPException(status_code=400, detail="Driver not found")
+        from app.models.driver_profile_model import DriverProfile as DriverProfileModel
+        profile = db.query(DriverProfileModel).filter(DriverProfileModel.id == point_data.driver_id).first()
+        if not profile:
+            raise HTTPException(status_code=400, detail="Driver not found")
     
     # Validate order exists if provided
     if point_data.order_id:
@@ -55,7 +58,6 @@ async def create_tracking_point(point_data: TrackingPointCreate, db: Session = D
             raise HTTPException(status_code=400, detail="Order not found")
     
     point = TrackingPointModel(
-        id=point_data.id if point_data.id else UUID(int=0),
         driver_id=point_data.driver_id,
         order_id=point_data.order_id,
         lat=point_data.lat,

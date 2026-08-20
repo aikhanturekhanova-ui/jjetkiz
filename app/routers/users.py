@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 def get_db():
     from app.db.session import get_db_session
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[UserSchema])
@@ -36,7 +36,6 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="Phone number already registered")
     user = UserModel(
-        id=user_data.id if user_data.id else UUID(int=0),
         phone=user_data.phone,
         role=user_data.role or "customer",
         full_name=user_data.full_name,

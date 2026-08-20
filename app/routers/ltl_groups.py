@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/ltl-groups", tags=["ltl-groups"])
 
 
 def get_db():
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[LtlGroupSchema])
@@ -33,7 +33,6 @@ async def get_ltl_group(group_id: UUID, db: Session = Depends(get_db)):
 @router.post("/", response_model=LtlGroupSchema, status_code=status.HTTP_201_CREATED)
 async def create_ltl_group(group_data: LtlGroupCreate, db: Session = Depends(get_db)):
     group = LtlGroupModel(
-        id=group_data.id if group_data.id else UUID(int=0),
         status=group_data.status or "active",
         total_weight_kg=group_data.total_weight_kg or 0.0,
         total_volume_m3=group_data.total_volume_m3 or 0.0,

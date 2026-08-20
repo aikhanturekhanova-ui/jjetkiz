@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Float, String, Uuid
 from .user_model import Base
@@ -15,4 +16,4 @@ class LtlGroup(Base):
     point_a_cluster_lng = Column(Float, nullable=False)
     point_b_cluster_lat = Column(Float, nullable=False)
     point_b_cluster_lng = Column(Float, nullable=False)
-    created_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)

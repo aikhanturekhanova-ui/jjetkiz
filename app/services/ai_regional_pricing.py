@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 from math import radians, cos, sin, sqrt, atan2
 from typing import Dict, Any, Optional, List
 from uuid import UUID
@@ -6,7 +7,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_ as sa_or
 
-from app.models import Order, DriverProfile, Settlement
+from app.models import Order, DriverProfile, Settlement, WeatherSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +114,7 @@ class AIRegionalPricingEngine:
         )
         dset = (
             self.db.query(Settlement)
-            .func.lower(Settlement.name).ilike(f"%{dest_kw}%")
+            .filter(func.lower(Settlement.name).ilike(f"%{dest_kw}%"))
             .first()
         )
         if oset or dset:
@@ -184,7 +185,7 @@ class AIRegionalPricingEngine:
         stale = (
             self.db.query(Order)
             .filter(Order.status == "matching")
-            .filter(Order.updated_at < func.now() - func.text("interval 1 day"))
+            .filter(Order.updated_at < datetime.utcnow() - timedelta(days=1))
             .all()
         )
         recalcd = 0

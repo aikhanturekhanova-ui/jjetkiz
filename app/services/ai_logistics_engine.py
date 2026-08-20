@@ -127,7 +127,8 @@ _engine_instance = None
 def get_ai_engine():
     global _engine_instance
     if _engine_instance is None:
-        _engine_instance = AILogisticsEngine()
+        from app.db.session import SessionLocal
+        _engine_instance = AILogisticsEngine(db=SessionLocal())
     return _engine_instance
 
 

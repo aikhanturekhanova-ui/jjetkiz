@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, model_validator
 from typing import Optional
 from uuid import UUID
 from enum import Enum
@@ -29,15 +29,11 @@ class OrderOfferCreate(BaseModel):
     status: OfferStatus = Field(default="sent")
     sent_at: datetime = Field(default_factory=datetime.utcnow)
 
-    @validator("order_id", "ltl_group_id", pre=True, always=True)
-    def check_exactly_one(cls, v, values):
-        has_order = "order_id" in values
-        has_ltl = "ltl_group_id" in values
-        if has_order and has_ltl:
+    @model_validator(mode="after")
+    def check_exactly_one(self):
+        if bool(self.order_id) == bool(self.ltl_group_id):
             raise ValueError("Exactly one of order_id or ltl_group_id required")
-        if not has_order and not has_ltl:
-            raise ValueError("Exactly one of order_id or ltl_group_id required")
-        return v
+        return self
 
 class OrderOfferUpdate(BaseModel):
     status: Optional[OfferStatus] = None

@@ -1,4 +1,4 @@
-from typing import Optional
+﻿from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/driver-profiles", tags=["driver-profiles"])
 
 
 def get_db():
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[DriverProfileSchema])
@@ -44,7 +44,6 @@ async def create_driver_profile(profile_data: DriverProfileCreate, db: Session =
         raise HTTPException(status_code=400, detail="Plate number already registered")
     
     profile = DriverProfileModel(
-        id=profile_data.id if profile_data.id else UUID(int=0),
         user_id=profile_data.user_id,
         vehicle_brand=profile_data.vehicle_brand,
         vehicle_plate_number=profile_data.vehicle_plate_number,

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+﻿from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/refresh-tokens", tags=["refresh-tokens"])
 
 
 def get_db():
-    return get_db_session()
+    yield from get_db_session()
 
 
 @router.get("/", response_model=List[RefreshTokenSchema])
@@ -57,7 +57,6 @@ async def create_refresh_token(token_data: RefreshTokenCreate, db: Session = Dep
         )
     
     token = RefreshTokenModel(
-        id=token_data.id if token_data.id else UUID(int=0),
         user_id=token_data.user_id,
         token_hash=token_data.token_hash,
         expires_at=token_data.expires_at,
